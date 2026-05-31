@@ -5,8 +5,7 @@
 - 3pin water level sensor (red)
 - MT3608 DC-DC step up converter
 - R385 Suction pump
-- 2N2222 (Sensor power supply)
-- IRLML2502 (DC-DC -> Pump power supply)
+- 2x IRLML2502 (DC-DC -> Pump power supply)
 - Some resistors
 
 > **This project uses a 5V 2A USB power supply from a standard USB charger.**
