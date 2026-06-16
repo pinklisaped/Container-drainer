@@ -1,20 +1,17 @@
 #include <Arduino.h>
 #include <settings.h>
 
-#define PUMP_PIN D1
-#define SENSOR_POWER_PIN D2
-
 volatile uint16_t forceSpillDuration = 0;
 
 uint16_t drain(uint16_t minStopLevel = MIN_SPILL_LEVEL / 2, uint16_t maxSpillSeconds = MAX_SPILL_SECONDS);
 void drainForce(uint16_t spillSeconds);
 void sleep(uint32_t interval = SLEEP_DURATION_SEC);
-void blinkLED1s();
+void blinkLED(unsigned long on = 750, unsigned long off = 250);
 
 void setup()
 {
 #ifdef DEBUG_ENABLE
-    Serial.begin(115200); // COM init
+    Serial.begin(9600); // COM init
 #endif
 
     pinMode(PUMP_PIN, OUTPUT);
@@ -33,7 +30,7 @@ void loop()
     DEBUG("Water level is " + String(waterLevel));
     if (waterLevel >= MIN_SPILL_LEVEL)
     {
-        uint16_t spillSeconds = drain(MIN_SPILL_LEVEL / 1.5, MAX_SPILL_SECONDS);
+        uint16_t spillSeconds = drain(MIN_SPILL_LEVEL / 1.5, MAX_SPILL_SECONDS / 2);
         digitalWrite(SENSOR_POWER_PIN, LOW);
         drainForce(spillSeconds / 2);
     }
@@ -45,33 +42,47 @@ void loop()
 uint16_t drain(uint16_t minStopLevel, uint16_t maxSpillSeconds)
 {
     uint16_t waterLevel = 0;
+    uint32_t startTime = millis();
     uint16_t spillSeconds = 0;
+
     digitalWrite(PUMP_PIN, HIGH);
+
     do
     {
-        blinkLED1s();
-        spillSeconds += 1;
+        blinkLED();
+        spillSeconds = (millis() - startTime) / 1000;
         waterLevel = analogRead(A0);
         DEBUG("Drain " + String(spillSeconds) + " sec, water level is " + String(waterLevel));
+
+        yield();
+
     } while (waterLevel >= minStopLevel && spillSeconds < maxSpillSeconds);
+
     digitalWrite(PUMP_PIN, LOW);
     return spillSeconds;
 }
 
 void drainForce(uint16_t spillSeconds)
 {
+    long remainingMs = (long)spillSeconds * 1000;
     digitalWrite(PUMP_PIN, HIGH);
-    for (; spillSeconds > 0; spillSeconds--)
-        blinkLED1s();
+    while (remainingMs > 0)
+    {
+        blinkLED(50, 150);
+        remainingMs -= 400;
+
+        yield();
+    }
+
     digitalWrite(PUMP_PIN, LOW);
 }
 
-void blinkLED1s()
+void blinkLED(unsigned long on, unsigned long off)
 {
     digitalWrite(LED_BUILTIN, HIGH);
-    delay(250);
+    delay(off);
     digitalWrite(LED_BUILTIN, LOW);
-    delay(750);
+    delay(on);
 }
 
 void sleep(uint32_t sleepDurationSec)

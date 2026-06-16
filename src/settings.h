@@ -15,6 +15,9 @@
 #define DEVICE_NAME "ESP Drainer " DEVICE_SERIAL
 
 #pragma once
+
+#define PUMP_PIN D1
+#define SENSOR_POWER_PIN D2
 constexpr const uint16_t SLEEP_DURATION_SEC = 60;
 constexpr const uint16_t MIN_SPILL_LEVEL = 300;
 constexpr const uint16_t MAX_SPILL_SECONDS = 600;
